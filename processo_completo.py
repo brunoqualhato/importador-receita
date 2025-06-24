@@ -44,7 +44,8 @@ class ProcessoCompleto:
             'limpar_downloads_antigos': False,
             'verificar_espaco_disco': True,
             'espaco_minimo_gb': 50,
-            'espaco_minimo_teste_gb': 10  # Menor requisito para teste
+            'espaco_minimo_teste_gb': 10,  # Menor requisito para teste
+            'incluir_mei': True  # Incluir MEI na importação (CPF anonimizado)
         }
         
         logger.info("Iniciando processo completo automatizado")
@@ -161,8 +162,14 @@ class ProcessoCompleto:
                 logger.info(f"Tentativa {tentativa}/{self.config['max_tentativas']}")
                 
                 # Executar download
+                cmd = [self.python_cmd, script]
+                
+                # Adicionar parâmetros de MEI
+                if not self.config['incluir_mei']:
+                    cmd.append('--excluir-mei')
+                
                 result = subprocess.run(
-                    [self.python_cmd, script],
+                    cmd,
                     cwd=self.base_dir,
                     timeout=None if self.config['download_completo'] else 1800  # 30min para teste
                 )
@@ -252,7 +259,8 @@ class ProcessoCompleto:
                 
                 downloader = CNPJDownloader(
                     download_dir="./dados_teste",
-                    db_path=banco_path
+                    db_path=banco_path,
+                    incluir_mei=self.config['incluir_mei']
                 )
                 
                 # Obter lista de arquivos
@@ -418,6 +426,10 @@ def main():
                        help='Pular download e usar banco existente')
     parser.add_argument('--limpar', action='store_true',
                        help='Limpar downloads e CSVs antigos antes de começar')
+    parser.add_argument('--incluir-mei', action='store_true', default=True,
+                       help='Incluir dados de MEI na importação (padrão: True)')
+    parser.add_argument('--excluir-mei', action='store_true',
+                       help='Excluir dados de MEI da importação')
     
     args = parser.parse_args()
     
@@ -438,6 +450,17 @@ def main():
     if args.limpar:
         processo.config['limpar_downloads_antigos'] = True
         print("🧹 Limpeza de arquivos antigos ativada")
+    
+    # Configurar opção de MEI
+    incluir_mei = True
+    if args.excluir_mei:
+        incluir_mei = False
+        print("🚫 MEI será EXCLUÍDO da importação")
+    elif args.incluir_mei:
+        incluir_mei = True
+        print("✅ MEI será INCLUÍDO na importação (CPF será anonimizado)")
+    
+    processo.config['incluir_mei'] = incluir_mei
     
     # Confirmar execução se modo completo
     if not args.teste and not args.sem_download:

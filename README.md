@@ -31,7 +31,30 @@ python processo_completo.py               # Processo completo
 - **SP_003.csv**: 27.044 linhas ✓
 - **Total**: 127.043 estabelecimentos de SP ✓
 
-## 📋 DADOS EM CADA LINHA CSV
+## � CONTROLE DE MEI (MICROEMPREENDEDOR INDIVIDUAL)
+
+### ✅ Incluir MEI (Padrão):
+- MEI será incluído na importação
+- **CPF dos sócios será anonimizado** (***.***.***-**) para proteger privacidade
+- Identificação de MEI por porte empresa '01' e natureza jurídica '2135'
+
+### 🚫 Excluir MEI:
+- MEI será completamente excluído da importação
+- Reduz volume de dados
+- Útil para focr apenas em empresas maiores
+
+### Como usar:
+```bash
+# Padrão: Incluir MEI (CPF anonimizado)
+python executar_rapido.py
+# Escolha opção 5 → Configurações Avançadas
+
+# Linha de comando: Excluir MEI
+python processo_completo.py --excluir-mei
+python downloader_cnpj.py --excluir-mei
+python download_teste.py --excluir-mei
+```
+
 
 Cada linha contém **TODOS os dados unificados**:
 
@@ -58,6 +81,19 @@ data_exclusao_simples,opcao_mei,data_opcao_mei,data_exclusao_mei,total_socios
 | `consultar_cnpj.py` | Consultar dados | Imediato | Buscar empresas |
 
 ## 🔧 CONFIGURAÇÕES FLEXÍVEIS
+
+### Controle de MEI (Microempreendedor Individual):
+```bash
+# Incluir MEI (padrão - CPF será anonimizado)
+python processo_completo.py
+
+# Excluir MEI da importação
+python processo_completo.py --excluir-mei
+
+# Apenas download com controle de MEI
+python downloader_cnpj.py --excluir-mei
+python download_teste.py --excluir-mei
+```
 
 ### Estados específicos:
 ```bash

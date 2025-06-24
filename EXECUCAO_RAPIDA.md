@@ -23,6 +23,7 @@ python executar_rapido.py
 - ✅ Execução com 1 clique
 - ✅ Opções de teste e completo
 - ✅ Verificações automáticas
+- ✅ **Configurações avançadas (MEI, Estados, etc.)**
 
 ### `processo_completo.py` - Script Master
 - ✅ Execução 100% automática
@@ -60,6 +61,23 @@ Cada linha do CSV contém:
 - **Simples**: dados do Simples Nacional
 - **Sócios**: quantidade de sócios
 
+## 🏢 CONTROLE DE MEI (MICROEMPREENDEDOR INDIVIDUAL)
+
+### Opção Padrão - Incluir MEI:
+- ✅ MEI será incluído na importação
+- 🔒 **CPF dos sócios anonimizado** (***.***.***-**)
+- 📊 Dados completos para análise
+
+### Opção Alternativa - Excluir MEI:
+- 🚫 MEI completamente excluído
+- 📉 Volume de dados reduzido
+- 🎯 Foco em empresas maiores
+
+### Como escolher:
+1. Execute: `python executar_rapido.py`
+2. Escolha opção **5) Configurações Avançadas**
+3. Configure MEI conforme sua necessidade
+
 ## 🔧 COMANDOS AVANÇADOS
 
 ```bash
@@ -69,10 +87,16 @@ python processo_completo.py --estados SP RJ MG
 # Modo teste
 python processo_completo.py --teste
 
+# Excluir MEI da importação
+python processo_completo.py --excluir-mei
+
+# Combinações
+python processo_completo.py --teste --excluir-mei --estados SP RJ
+
 # Usar banco existente
 python gerar_csv_estados.py --db cnpj_dados.db
 
-# Gerar apenas CSVs
+# Gerar apenas CSVs (interface)
 python executar_rapido.py
 # Escolha opção 3
 ```

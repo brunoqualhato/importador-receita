@@ -41,7 +41,8 @@ class CNPJDownloader:
     def __init__(self, base_url: str = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/2025-06/",
                  download_dir: str = "./dados_cnpj",
                  db_path: str = "./cnpj_dados.db",
-                 max_workers: int = 4):
+                 max_workers: int = 4,
+                 incluir_mei: bool = True):
         """
         Inicializa o downloader
         
@@ -50,11 +51,13 @@ class CNPJDownloader:
             download_dir: Diretório para salvar os arquivos baixados
             db_path: Caminho do banco SQLite
             max_workers: Número máximo de threads para download
+            incluir_mei: Se True, inclui dados de MEI (sem CPF). Se False, exclui MEI
         """
         self.base_url = base_url
         self.download_dir = Path(download_dir)
         self.db_path = db_path
         self.max_workers = max_workers
+        self.incluir_mei = incluir_mei
         
         # Criar diretório de download se não existir
         self.download_dir.mkdir(parents=True, exist_ok=True)
@@ -479,6 +482,67 @@ class CNPJDownloader:
         
         return None
     
+    def _is_mei(self, row: List[str], file_type: str) -> bool:
+        """
+        Verifica se um registro é de MEI (Microempreendedor Individual)
+        
+        Args:
+            row: Dados da linha
+            file_type: Tipo do arquivo
+            
+        Returns:
+            True se for MEI, False caso contrário
+        """
+        try:
+            if file_type == 'empresas':
+                # MEI é identificado por porte_empresa = '01' (Micro Empresa) 
+                # e natureza_juridica específica para MEI
+                if len(row) >= 6:
+                    porte_empresa = row[5].strip() if row[5] else ''
+                    natureza_juridica = row[2].strip() if row[2] else ''
+                    # MEI tem porte '01' e natureza jurídica '2135' (Empresário Individual)
+                    return porte_empresa == '01' and natureza_juridica == '2135'
+            
+            elif file_type == 'simples':
+                # MEI também pode ser identificado na tabela simples pela opcao_mei
+                if len(row) >= 5:
+                    opcao_mei = row[4].strip() if row[4] else ''
+                    return opcao_mei == 'S'  # 'S' indica que optou pelo MEI
+            
+            return False
+            
+        except Exception:
+            return False
+    
+    def _sanitize_cpf_for_mei(self, row: List[str], file_type: str) -> List[str]:
+        """
+        Remove CPF de registros MEI por questões de privacidade
+        
+        Args:
+            row: Dados da linha
+            file_type: Tipo do arquivo
+            
+        Returns:
+            Linha com CPF removido se for MEI
+        """
+        try:
+            if file_type == 'socios':
+                # Na tabela sócios, o CPF está na posição 3 (cpf_cnpj_socio)
+                if len(row) >= 4:
+                    cpf_cnpj = row[3].strip() if row[3] else ''
+                    # Se é CPF (11 dígitos) de MEI, remover por privacidade
+                    if cpf_cnpj and len(cpf_cnpj) == 11 and cpf_cnpj.isdigit():
+                        # Verificar se o CNPJ básico corresponde a um MEI
+                        # Para simplificar, vamos anonimizar todos os CPFs em sócios
+                        row_copy = row.copy()
+                        row_copy[3] = '***.***.***-**'  # CPF anonimizado
+                        return row_copy
+            
+            return row
+            
+        except Exception:
+            return row
+    
     def _prepare_row_data(self, row: List[str], file_type: str) -> Optional[tuple]:
         """
         Prepara os dados de uma linha para inserção
@@ -493,6 +557,15 @@ class CNPJDownloader:
         try:
             # Limpar e normalizar dados
             clean_row = [cell.strip().replace('"', '') if cell else None for cell in row]
+            
+            # Verificar se é MEI e aplicar filtros
+            if not self.incluir_mei and self._is_mei(clean_row, file_type):
+                # Pular registros MEI se incluir_mei=False
+                return None
+            
+            # Se incluir MEI, sanitizar CPF para privacidade
+            if self.incluir_mei:
+                clean_row = self._sanitize_cpf_for_mei(clean_row, file_type)
             
             # Mapear campos baseado no tipo
             if file_type == 'empresas':
@@ -621,6 +694,24 @@ class CNPJDownloader:
 
 
 if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Download e processamento de dados CNPJ da Receita Federal')
+    parser.add_argument('--excluir-mei', action='store_true',
+                       help='Excluir dados de MEI da importação')
+    parser.add_argument('--incluir-mei', action='store_true', default=True,
+                       help='Incluir dados de MEI na importação (padrão: True)')
+    
+    args = parser.parse_args()
+    
+    # Configurar opção de MEI
+    incluir_mei = True
+    if args.excluir_mei:
+        incluir_mei = False
+        logger.info("🚫 MEI será EXCLUÍDO da importação")
+    else:
+        logger.info("✅ MEI será INCLUÍDO na importação (CPF será anonimizado)")
+    
     # Configurações
     BASE_URL = "https://arquivos.receitafederal.gov.br/dados/cnpj/dados_abertos_cnpj/2025-06/"
     DOWNLOAD_DIR = "./dados_cnpj"
@@ -632,7 +723,8 @@ if __name__ == "__main__":
         base_url=BASE_URL,
         download_dir=DOWNLOAD_DIR,
         db_path=DB_PATH,
-        max_workers=MAX_WORKERS
+        max_workers=MAX_WORKERS,
+        incluir_mei=incluir_mei
     )
     
     try:

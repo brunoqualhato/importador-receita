@@ -28,10 +28,11 @@ def main():
     print("2) 🚀 PROCESSO COMPLETO (todos os dados, várias horas)")
     print("3) 📊 Apenas gerar CSVs (usar dados já baixados)")
     print("4) 🧹 Limpar e recomeçar do zero")
+    print("5) ⚙️ Configurações avançadas (MEI, Estados, etc.)")
     print("0) ❌ Sair")
     
     try:
-        opcao = input("\nDigite sua opção (0-4): ").strip()
+        opcao = input("\nDigite sua opção (0-5): ").strip()
         
         if opcao == "0":
             print("Saindo...")
@@ -118,6 +119,10 @@ def main():
                 elif recomecar == "2":
                     os.system(f"{sys.executable} processo_completo.py --limpar")
         
+        elif opcao == "5":
+            print("\n⚙️ CONFIGURAÇÕES AVANÇADAS")
+            executar_configuracoes_avancadas()
+        
         else:
             print("❌ Opção inválida!")
     
@@ -128,6 +133,91 @@ def main():
 
     print("\n" + "="*50)
     print("Processo finalizado!")
+
+
+def executar_configuracoes_avancadas():
+    """Menu de configurações avançadas"""
+    print("="*50)
+    print("CONFIGURAÇÕES AVANÇADAS")
+    print("="*50)
+    
+    # Configuração de MEI
+    print("\n📊 MICROEMPREENDEDOR INDIVIDUAL (MEI)")
+    print("1) ✅ Incluir MEI (CPF será anonimizado para privacidade)")
+    print("2) 🚫 Excluir MEI da importação")
+    
+    mei_opcao = input("\nOpção MEI (1-2): ").strip()
+    parametro_mei = ""
+    
+    if mei_opcao == "2":
+        parametro_mei = "--excluir-mei"
+        print("✅ MEI será EXCLUÍDO da importação")
+    else:
+        print("✅ MEI será INCLUÍDO (CPF anonimizado)")
+    
+    # Configuração de Estados
+    print("\n🗺️ ESTADOS A PROCESSAR")
+    print("1) Todos os estados")
+    print("2) Apenas alguns estados específicos")
+    
+    estados_opcao = input("\nOpção Estados (1-2): ").strip()
+    parametro_estados = ""
+    
+    if estados_opcao == "2":
+        estados = input("Digite os estados (ex: SP RJ MG): ").upper().strip()
+        if estados:
+            parametro_estados = f"--estados {estados}"
+            print(f"✅ Estados selecionados: {estados}")
+    
+    # Configuração de Tipo de Processo
+    print("\n🔄 TIPO DE PROCESSO")
+    print("1) 🧪 Teste rápido (poucos dados)")
+    print("2) 🚀 Processo completo (todos os dados)")
+    
+    tipo_opcao = input("\nTipo de processo (1-2): ").strip()
+    parametro_teste = ""
+    
+    if tipo_opcao == "1":
+        parametro_teste = "--teste"
+        print("✅ Modo teste selecionado")
+    else:
+        print("✅ Processo completo selecionado")
+    
+    # Executar com as configurações
+    print("\n" + "="*50)
+    print("RESUMO DAS CONFIGURAÇÕES:")
+    if parametro_mei:
+        print("- MEI: Excluído")
+    else:
+        print("- MEI: Incluído (CPF anonimizado)")
+    
+    if parametro_estados:
+        print(f"- Estados: {estados}")
+    else:
+        print("- Estados: Todos")
+    
+    if parametro_teste:
+        print("- Tipo: Teste rápido")
+    else:
+        print("- Tipo: Processo completo")
+    
+    print("="*50)
+    
+    confirma = input("\nExecutar com essas configurações? (s/n): ").lower().strip()
+    if confirma in ['s', 'sim', 'y', 'yes']:
+        # Montar comando
+        comando = f"{sys.executable} processo_completo.py"
+        if parametro_teste:
+            comando += f" {parametro_teste}"
+        if parametro_mei:
+            comando += f" {parametro_mei}"
+        if parametro_estados:
+            comando += f" {parametro_estados}"
+        
+        print(f"\nExecutando: {comando}")
+        os.system(comando)
+    else:
+        print("Execução cancelada")
 
 
 if __name__ == "__main__":

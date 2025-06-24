@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from downloader_cnpj import CNPJDownloader
 import logging
 
-def download_teste():
+def download_teste(incluir_mei=True):
     """Baixa apenas alguns arquivos para teste"""
     print("=== DOWNLOAD DE TESTE - DADOS CNPJ ===\n")
     
@@ -19,7 +19,8 @@ def download_teste():
     downloader = CNPJDownloader(
         download_dir="./dados_teste",
         db_path="./cnpj_teste.db",
-        max_workers=2
+        max_workers=2,
+        incluir_mei=incluir_mei
     )
     
     # Obter lista de arquivos
@@ -126,8 +127,26 @@ def download_teste():
         print("Nenhum arquivo foi baixado com sucesso")
 
 if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Download de teste dos dados CNPJ')
+    parser.add_argument('--excluir-mei', action='store_true',
+                       help='Excluir dados de MEI da importação')
+    parser.add_argument('--incluir-mei', action='store_true', default=True,
+                       help='Incluir dados de MEI na importação (padrão: True)')
+    
+    args = parser.parse_args()
+    
+    # Configurar opção de MEI
+    incluir_mei = True
+    if args.excluir_mei:
+        incluir_mei = False
+        print("🚫 MEI será EXCLUÍDO da importação")
+    else:
+        print("✅ MEI será INCLUÍDO na importação (CPF será anonimizado)")
+    
     try:
-        download_teste()
+        download_teste(incluir_mei=incluir_mei)
     except KeyboardInterrupt:
         print("\nProcesso interrompido pelo usuário")
     except Exception as e:
