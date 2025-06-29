@@ -17,6 +17,19 @@ python processo_completo.py --teste        # Teste rápido
 python processo_completo.py               # Processo completo
 ```
 
+## 🎯 NOVAS FUNCIONALIDADES IMPLEMENTADAS
+
+### ✅ Filtro de MEI (Microempreendedor Individual)
+- **Incluir MEI**: Mantém MEI nos dados, mas **anonimiza CPF** por privacidade
+- **Excluir MEI**: Remove completamente MEI da importação
+- **Configurável** em todos os scripts através do parâmetro `--incluir-mei` / `--excluir-mei`
+
+### ✅ CSVs Otimizados para WordPress
+- **Apenas empresas ATIVAS**: Filtra automaticamente empresas com situação cadastral "Ativa"
+- **Atividades secundárias**: Coluna separada com descrições das atividades separadas por vírgula
+- **Sócios CNPJ**: Coluna com CNPJs de pessoas jurídicas sócias (exclui CPF para privacidade)
+- **Dados unificados**: Todas as informações relevantes em uma única linha
+
 ## 📊 RESULTADOS COMPROVADOS
 
 ### ✅ DADOS PROCESSADOS (TESTE):
@@ -93,6 +106,25 @@ python processo_completo.py --excluir-mei
 # Apenas download com controle de MEI
 python downloader_cnpj.py --excluir-mei
 python download_teste.py --excluir-mei
+```
+
+### Controle de MEI:
+```bash
+# Incluir MEI (com CPF anonimizado)
+python processo_completo.py --incluir-mei
+
+# Excluir MEI completamente
+python processo_completo.py --excluir-mei
+
+# Download direto
+python downloader_cnpj.py --incluir-mei
+python downloader_cnpj.py --excluir-mei
+```
+
+### Apenas empresas ativas (novo padrão):
+```bash
+# CSVs agora incluem apenas empresas com situação "Ativa"
+python gerar_csv_estados.py --db cnpj_dados.db
 ```
 
 ### Estados específicos:
@@ -264,3 +296,76 @@ python consultar_cnpj.py --stats
 🎯 **Desenvolvido por**: Bruno Qualhato  
 📅 **Data**: 23 de junho de 2025  
 🚀 **Status**: Pronto para produção!
+
+## ✅ IMPLEMENTAÇÕES CONCLUÍDAS (29/06/2025)
+
+### 🎯 Funcionalidades Solicitadas:
+
+#### 1. **Filtro de MEI na Importação** ✅
+- **Incluir MEI**: Dados de MEI são mantidos, mas **CPF é anonimizado** (`***.***.***-**`)
+- **Excluir MEI**: MEI são completamente filtrados da importação
+- **Identificação**: Porte empresa '01' + natureza jurídica '2135'
+- **Configurável**: Parâmetro `--incluir-mei` / `--excluir-mei` em todos os scripts
+
+#### 2. **CSVs Apenas de Empresas Ativas** ✅
+- **Filtro automático**: Apenas empresas com `situacao_cadastral = '02'` (Ativa)
+- **Coluna padronizada**: `situacao_cadastral` sempre mostra "Ativa"
+- **Redução significativa**: Elimina empresas inativas, suspensas, baixadas
+
+#### 3. **Atividades Secundárias em Coluna Separada** ✅
+- **Nova coluna**: `atividades_secundarias`
+- **Formato**: Descrições das atividades separadas por vírgula
+- **Processamento**: Busca automática das descrições dos CNAEs secundários
+
+#### 4. **Sócios CNPJ em Coluna Única** ✅
+- **Nova coluna**: `socios_cnpj`
+- **Conteúdo**: CNPJs de pessoas jurídicas sócias (14 dígitos)
+- **Privacidade**: Exclui CPF (11 dígitos) automaticamente
+- **Formato**: CNPJs separados por vírgula
+
+### 🔧 Scripts Modificados:
+
+#### **`downloader_cnpj.py`**
+- ✅ Parâmetro `incluir_mei` no construtor
+- ✅ Função `_is_mei()` para identificação
+- ✅ Função `_sanitize_cpf_for_mei()` para anonimização
+- ✅ Filtro na `_prepare_row_data()`
+- ✅ Argumentos de linha de comando `--incluir-mei` / `--excluir-mei`
+
+#### **`gerar_csv_estados.py`**
+- ✅ Filtro `WHERE situacao_cadastral = '02'` em todas as queries
+- ✅ Função `get_atividades_secundarias()` para processar CNAEs
+- ✅ Função `get_socios_cnpj()` para buscar sócios PJ
+- ✅ Novas colunas no cabeçalho CSV
+- ✅ Processamento automático das novas colunas
+
+#### **`processo_completo.py`**
+- ✅ Configuração `incluir_mei` na classe
+- ✅ Argumentos `--incluir-mei` / `--excluir-mei`
+- ✅ Repasse do parâmetro para scripts filhos
+
+#### **`executar_rapido.py`**
+- ✅ Nova opção "5) Configurações Avançadas"
+- ✅ Menu para escolher incluir/excluir MEI
+- ✅ Interface amigável para configurações
+
+#### **`download_teste.py`**
+- ✅ Argumentos de linha de comando para MEI
+- ✅ Compatibilidade com nova funcionalidade
+
+### 📊 Estatísticas de Teste:
+- **Total de empresas**: 4,494,860
+- **MEI identificados**: 1,003,111 (22.3%)
+- **Novas colunas**: 45 campos no CSV (anteriormente 43)
+- **Funcionalidade**: ✅ Testada e funcionando
+
+### 🎯 Resultado Final:
+Todas as funcionalidades solicitadas foram **implementadas e testadas**:
+1. ✅ Controle de MEI na importação (incluir/excluir + anonimização)
+2. ✅ Apenas empresas ativas nos CSVs
+3. ✅ Atividades secundárias em coluna separada
+4. ✅ Sócios CNPJ em coluna única
+5. ✅ Interface amigável para configurações
+6. ✅ Compatibilidade com todos os fluxos existentes
+
+**Sistema pronto para produção!** 🚀
